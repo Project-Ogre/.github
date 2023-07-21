@@ -13,7 +13,8 @@ Client-side (Angular App)  <----> | .NET REST API on Azure PaaS App Service | <-
                                                         |
                                                         V
                                                   Azure DataBricks (Apache Spark)
-## Components
+```
+## Components:
 Client-side (Angular App): The front-end of the game where users interact with the game UI.
 
 .NET REST API on Azure PaaS App Service: The server-side of the application handles the game logic, and manages interactions with the Azure SQL database and Azure Storage.
