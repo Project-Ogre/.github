@@ -20,6 +20,14 @@ Player (via Angular App)  ---> | Azure Kubernetes Services (API Microservices) |
 
 ## Architectural Components
 
+### UI (Angular App)
+
+The front-end of the game where users interact with the game's user interface. You can access the UI by visiting [Project Ogre UI](https://project-ogre-ui.azurewebsites.net/).
+
+### API (Azure Kubernetes Services)
+
+The API layer consists of a set of microservices hosted on Azure Kubernetes Services (AKS) handling player interactions and data storage. To access the API, use [Project Ogre API](https://project-ogre-api.azurewebsites.net/).
+
 ### Player (via Angular App)
 
 The Angular-based web application serves as the player's interface to the game. Players interact with the UI to view and edit characters and parties, manage their inventory, and initiate quests and PvP battles.
