@@ -1,34 +1,57 @@
 # Game Architecture
 
-Below is a high-level overview of the game's architecture.
+Below is a high-level overview of the game's architecture, consisting of various interconnected components that facilitate player interactions and data flow.
 
 ```plaintext
-Client-side (Angular App)  <----> | .NET REST API on Azure PaaS App Service | <----> Azure SQL Database
-                                  |     (Load Balanced and Traffic Managed)  | <----> Azure Storage <----|
-                                  |                                        | <----> Azure CosmosDB    |
-                                  |                                        |                          |
-                                  |------------------> ChatGPT API          |   Azure Functions <------|
-                                  |                                        |
-                                  |------------------> Azure Event Hubs (Kafka Interface)
-                                                        |
-                                                        V
-                                                  Azure DataBricks (Apache Spark)
+Game Architecture
+
+Player (via Angular App)  ---> | Azure Kubernetes Services (API Microservices) | ---> Azure SQL Database
+                                 |     (Load Balanced and Traffic Managed)    | ---> Azure Storage
+                                 |                                          | <--- Azure Cosmos DB   |
+                                 |                                          |                         |
+                                 |------------------> Azure OpenAI Service   |   Azure Functions <----|
+                                 |                                          |
+                                 |------------------> Azure Event Hubs (Kafka Interface)
+                                                       |
+                                                       V
+                                                 Azure DataBricks (Apache Spark)
+
 ```
-## Components:
-Client-side (Angular App): The front-end of the game where users interact with the game UI.
 
-.NET REST API on Azure PaaS App Service: The server-side of the application handles the game logic, and manages interactions with the Azure SQL database and Azure Storage.
+## Architectural Components
 
-Azure SQL Database: A fully managed relational database that is used for storing game-related data, including player information, in-game assets, game states, etc.
+### Player (via Angular App)
 
-Azure Storage: The battles in the game are recorded in JSON format and stored in Azure Storage. The creation of new blob triggers Azure Functions.
+The Angular-based web application serves as the player's interface to the game. Players interact with the UI to view and edit characters and parties, manage their inventory, and initiate quests and PvP battles.
 
-Azure CosmosDB: A NoSQL database for storing unstructured data or data that doesn't fit well into a relational model.
+### Azure Kubernetes Services (API Microservices)
 
-ChatGPT API: Integrated to enhance the game experience by generating interactive dialogues with NPCs, or providing a help center for users within the game.
+The API layer consists of a set of microservices hosted on Azure Kubernetes Services (AKS). These microservices handle interactions between the player's UI and various data storage components. They receive information from the Angular App related to character and party changes, inventory management, quests, and PvP battles.
 
-Azure Functions: Detects the creation of new blobs in Azure Storage, parse these files, and emit events into Azure Event Hubs.
+### Azure SQL Database
 
-Azure Event Hubs (with Kafka interface): A real-time data ingestion service that takes in events from Azure Functions and makes them available for consumption.
+A fully managed relational database used to store critical game-related data, including player characters, parties, inventory, and quest progress. The API microservices communicate with the database to read and update player information based on user interactions.
 
-Azure Databricks (Apache Spark): Provides a fast, easy, and collaborative Apache Spark-based analytics platform for real-time analytics on the events consumed from Azure Event Hubs.
+### Azure Storage (Azure BLOB Cold Storage)
+
+The battle data resulting from PvP battles is stored in Azure BLOB cold storage. This data is primarily used for two purposes: the initial replay by the user to review the battle and analytics processing through Azure DataBricks.
+
+### Azure Cosmos DB
+
+A NoSQL database that stores graph and unstructured narrative data related to characters, players, and the game world. It captures and manages complex narrative elements and world events that evolve based on player actions.
+
+### Azure OpenAI Service
+
+This service enhances the game's narrative during player versus environment (PvE) questing events. Azure Functions utilize the OpenAI Service to dynamically generate and evolve the narrative based on player choices and outcomes during quests.
+
+### Azure Functions
+
+Azure Functions play a crucial role in handling backend tasks. They react to PvE questing events initiated by players and use the Azure OpenAI Service to generate the next increment of the narrative. Additionally, Azure Functions detect the creation of new blobs in Azure Storage (resulting from PvP battles), parse these files, and emit events into Azure Event Hubs.
+
+### Azure Event Hubs (with Kafka interface)
+
+Azure Event Hubs serves as a real-time data ingestion service, receiving events emitted by Azure Functions. It handles both battle data events from Azure Storage and PvE questing events generated by Azure OpenAI Service, making them available for consumption by downstream components.
+
+### Azure DataBricks (Apache Spark)
+
+Azure DataBricks provides an Apache Spark-based analytics platform for real-time analytics on battle data events coming from Azure Event Hubs. This analytics pipeline processes, aggregates, and derives insights from the battle data, helping to improve game balance and understand player behavior.
