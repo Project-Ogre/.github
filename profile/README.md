@@ -22,11 +22,11 @@ Player (via Angular App)  ---> | Azure Kubernetes Services (API Microservices) |
 
 ### UI (Angular App)
 
-The front-end of the game where users interact with the game's user interface. You can access the UI by visiting [Project Ogre UI](https://project-ogre-ui.azurewebsites.net/).
+The front-end of the game where users interact with the game's user interface. You can access the UI by visiting [Idle Ogre UI](https://zealous-mud-0ef58d91e.5.azurestaticapps.net/title).
 
 ### API (Azure Kubernetes Services)
 
-The API layer consists of a set of microservices hosted on Azure Kubernetes Services (AKS) handling player interactions and data storage. To access the API, use [Project Ogre API](https://project-ogre-api.azurewebsites.net/).
+The API layer consists of a set of microservices hosted on Azure Kubernetes Services (AKS) handling player interactions and data storage. To access the API, use [Idle Ogre API](https://project-ogre-api.azurewebsites.net/).
 
 ### Player (via Angular App)
 
