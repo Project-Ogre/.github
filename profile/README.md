@@ -1,65 +1,36 @@
 # Game Architecture
 
-Below is a high-level overview of the game's architecture, consisting of various interconnected components that facilitate player interactions and data flow.
+High-level overview of how District Ogre is hosted and how data moves through the system.
 
 ```plaintext
-Game Architecture
-
-Player (via Angular App)  ---> | Azure Kubernetes Services (API Microservices) | ---> Azure SQL Database
-                                 |     (Load Balanced and Traffic Managed)    | ---> Azure Storage
-                                 |                                          | <--- Azure Cosmos DB   |
-                                 |                                          |                         |
-                                 |------------------> Azure OpenAI Service   |   Azure Functions <----|
-                                 |                                          |
-                                 |------------------> Azure Event Hubs (Kafka Interface)
-                                                       |
-                                                       V
-                                                 Azure DataBricks (Apache Spark)
-
+Player (Angular App)
+        |
+        v
+Azure Static Web Apps (UI)
+        |
+        v
+Azure App Service (ASP.NET Core API)
+   |         |            |
+   v         v            v
+Azure SQL   Azure Storage   Azure SignalR
+            (blobs/queues)
 ```
 
-## Architectural Components
+## Components
 
 ### UI (Angular App)
+Players manage characters, parties, inventory, shops, districts, and skirmishes (PvE/PvP).  
+Live UI: [District Ogre](https://zealous-mud-0ef58d91e.5.azurestaticapps.net/)
 
-The front-end of the game where users interact with the game's user interface. You can access the UI by visiting [Idle Ogre UI](https://zealous-mud-0ef58d91e.5.azurestaticapps.net/title).
-
-### API (Azure Kubernetes Services)
-
-The API layer consists of a set of microservices hosted on Azure Kubernetes Services (AKS) handling player interactions and data storage. To access the API, use [Idle Ogre API](https://project-ogre-api.azurewebsites.net/).
-
-### Player (via Angular App)
-
-The Angular-based web application serves as the player's interface to the game. Players interact with the UI to view and edit characters and parties, manage their inventory, and initiate quests and PvP battles.
-
-### Azure Kubernetes Services (API Microservices)
-
-The API layer consists of a set of microservices hosted on Azure Kubernetes Services (AKS). These microservices handle interactions between the player's UI and various data storage components. They receive information from the Angular App related to character and party changes, inventory management, quests, and PvP battles.
+### API (Azure App Service)
+A modular ASP.NET Core API handles game logic and persistence for players, characters, parties, inventory, districts, and skirmishes. In-process workers process district turns and related background work.  
+Live API: [District Ogre API](https://project-ogre-api.azurewebsites.net/)
 
 ### Azure SQL Database
+Primary store for game state: players, characters, parties, inventory, districts, ladders, and related progress.
 
-A fully managed relational database used to store critical game-related data, including player characters, parties, inventory, and quest progress. The API microservices communicate with the database to read and update player information based on user interactions.
+### Azure Storage
+Blob storage holds skirmish battle payloads used for replay. Storage queues can carry district turn messages when not processed in-process by the API.
 
-### Azure Storage (Azure BLOB Cold Storage)
-
-The battle data resulting from PvP battles is stored in Azure BLOB cold storage. This data is primarily used for two purposes: the initial replay by the user to review the battle and analytics processing through Azure DataBricks.
-
-### Azure Cosmos DB
-
-A NoSQL database that stores graph and unstructured narrative data related to characters, players, and the game world. It captures and manages complex narrative elements and world events that evolve based on player actions.
-
-### Azure OpenAI Service
-
-This service enhances the game's narrative during player versus environment (PvE) questing events. Azure Functions utilize the OpenAI Service to dynamically generate and evolve the narrative based on player choices and outcomes during quests.
-
-### Azure Functions
-
-Azure Functions play a crucial role in handling backend tasks. They react to PvE questing events initiated by players and use the Azure OpenAI Service to generate the next increment of the narrative. Additionally, Azure Functions detect the creation of new blobs in Azure Storage (resulting from PvP battles), parse these files, and emit events into Azure Event Hubs.
-
-### Azure Event Hubs (with Kafka interface)
-
-Azure Event Hubs serves as a real-time data ingestion service, receiving events emitted by Azure Functions. It handles both battle data events from Azure Storage and PvE questing events generated by Azure OpenAI Service, making them available for consumption by downstream components.
-
-### Azure DataBricks (Apache Spark)
-
-Azure DataBricks provides an Apache Spark-based analytics platform for real-time analytics on battle data events coming from Azure Event Hubs. This analytics pipeline processes, aggregates, and derives insights from the battle data, helping to improve game balance and understand player behavior.
+### Azure SignalR
+Pushes live district updates to connected clients (e.g. map / turn state).
